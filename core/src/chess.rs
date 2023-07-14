@@ -1,16 +1,64 @@
 use alloc::{borrow::ToOwned, vec::Vec};
-use shakmaty::{Chess, Position, MoveList};
+use shakmaty::{Chess, Position, MoveList, Square};
 
 pub use shakmaty::Move;
 
 pub type ColorBitboard = u64;
 pub type RoleBitboard = [u64; 6];
-// simple move sent to the player. player will just send the index of the move
-// and the game module will apply its version with all information to the board
+
 pub struct SimpleMove {
-    pub from: Option<u32>, // player module will convert to Square
-    pub to: u32,
-    pub capture: bool,
+    from: Option<u8>, // player module will convert to Square
+    to: u8,
+    capture: Option<u8>,
+}
+
+impl SimpleMove {
+    pub fn rank_travel(&self) -> i32 {
+        let to_rank = Square::try_from(self.to).unwrap().rank();
+    
+        let from_rank = match self.from {
+            Some(x) => Square::try_from(x).unwrap().rank(),
+            None => to_rank,
+        };
+
+        (to_rank as i32) - (from_rank as i32)
+    }
+
+    pub fn file_travel(&self) -> i32 {
+        let to_file = Square::try_from(self.to).unwrap().file();
+    
+        let from_file = match self.from {
+            Some(x) => Square::try_from(x).unwrap().file(),
+            None => to_file,
+        };
+
+        (to_file as i32) - (from_file as i32)
+    }
+
+    pub fn center_travel(&self) -> i32 {
+        let to = Square::try_from(self.to).unwrap();
+        let from = match self.from {
+            Some(x) => Square::try_from(x).unwrap(),
+            None => to,
+        };
+
+        let center = match (from.file() as u8, from.rank() as u8) {
+            (3, 3) => Square::D4,
+            (3, 4) => Square::D5,
+            (4, 3) => Square::E4,
+            (4, 4) => Square::E5,
+            _ => Square::D4,
+        };
+
+        let postdist = to.distance(center);
+        let predist = from.distance(center);
+
+        (postdist as i32) - (predist as i32)
+    }
+
+    pub fn capture_value(&self) -> i32 {
+        self.capture.unwrap_or(0) as i32
+    } 
 }
 
 impl From<Move> for SimpleMove {
@@ -21,13 +69,14 @@ impl From<Move> for SimpleMove {
                 None => None,
             },
             to: m.to().into(),
-            capture: m.is_capture(),
+            capture: match m.capture() {
+                Some(x) => Some(x.into()),
+                None => None,
+            },
         }
     }
 }
 
-// since we want a fog of war, only return player pieces and valid moves
-// for the player
 pub struct Turn {
     position: (ColorBitboard, Option<RoleBitboard>), // convert to color and role bitboards
     moves: Vec<SimpleMove>
@@ -65,11 +114,7 @@ impl Board {
     pub fn simple_moves(&self) -> Vec<SimpleMove> {
         let mut move_list: Vec<SimpleMove> = Vec::new();
         for m in &self.moves {
-            move_list.push(SimpleMove {
-                from: Some(m.from().unwrap().into()),
-                to: m.to().into(),
-                capture: m.is_capture(),
-            });
+            move_list.push(m.to_owned().into());
         }
         move_list
     }
@@ -89,8 +134,6 @@ impl Board {
         self.apply_move(&m);
     }
     
-    // generate_turn will generate a turn for the player, giving
-    // them context of just their color's pieces and valid moves
     pub fn generate_turn(&mut self) -> Turn {
 
         let color_bb: ColorBitboard = self.position.us().0;
@@ -100,5 +143,28 @@ impl Board {
             position: (color_bb, None),
             moves: self.simple_moves(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use shakmaty::{Role, Square};
+
+    #[test]
+    fn test_simple_move() {
+        let m = Move::Normal {
+            role: Role::Pawn,
+            from: Square::E2,
+            to: Square::E4,
+            capture: None,
+            promotion: None,
+        };
+
+        let sm: SimpleMove = m.into();
+
+        assert_eq!(sm.from, Some(52));
+        assert_eq!(sm.to, 36);
+        assert_eq!(sm.capture, None);
     }
 }

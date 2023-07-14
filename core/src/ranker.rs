@@ -7,8 +7,9 @@
 // 3. distance to center
 
 use crate::chess::{Turn, SimpleMove};
+use shakmaty::Square;
 
-struct Ranker {
+pub struct Ranker {
     weights: [u8; 3],
     turn: Option<Turn>,
 }
@@ -18,7 +19,7 @@ impl Ranker {
     pub fn new_from_weights(weights: [u8; 3]) -> Ranker {
         assert_eq!(Ranker::is_valid_weights(weights), true);
         Ranker {
-            weights: weights,
+            weights,
             turn: None,
         }
     }
@@ -26,8 +27,8 @@ impl Ranker {
     /// check if a weight array is valid.
     pub fn is_valid_weights(weights: [u8; 3]) -> bool {
         let mut sum = 0;
-        for i in 0..3 {
-            sum += weights[i];
+        for i in weights.iter() {
+            sum += i;
         }
         sum == 100
     }
@@ -66,31 +67,22 @@ impl Ranker {
         self.weights
     }
     
-    //score a Move. Move is shakmaty::Move made available to us by the chess crate.
-    //points are awarded based on weight criteria.
-    pub fn score_move(&self, m: &SimpleMove) -> u8 {
-        let mut score = 0; 
-        //material gain/loss
-        if m.capture {
-            score += self.weights[0];
-        }
-        //forward movement - count how many squares forward the piece moved
-        //TODO: use the actual API
-        match m.from {
-            Some(x) => {
-                let from_rank = x / 8;
-                let to_rank = m.to / 8;
-                
-                // add ranks forward to score
-                if from_rank < to_rank {
-                    score += self.weights[1] * (to_rank - from_rank) as u8;
-                }
-            },
-            None => {},
-        }
-        score
+    pub fn score_move(&self, m: &SimpleMove) -> i32 {
+        //TODO: potential bitshift optimization, maybe not worth 
+        let (mut material, mut forward, mut center) = (0, 0, 0);
+        
+        // material gain with value of captured piece, or 0 if no capture
+        material += m.capture_value(); 
+
+        //forward movement
+        forward += m.rank_travel();
+        
+        // center progress
+        center += m.center_travel();
+
+        // calculate score with weights, using integer math
+        ((material * self.weights[0] as i32) / 100) +
+        ((forward * self.weights[1] as i32) / 100) +
+        ((center * self.weights[2] as i32) / 100)
     }
-
-
-    
 }
