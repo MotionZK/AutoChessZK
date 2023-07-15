@@ -7,7 +7,6 @@
 // 3. distance to center
 
 use crate::chess::{Turn, SimpleMove};
-use shakmaty::Square;
 
 pub struct Ranker {
     weights: [u8; 3],
@@ -67,6 +66,7 @@ impl Ranker {
         self.weights
     }
     
+    /// score the move with the ranker's weights.
     pub fn score_move(&self, m: &SimpleMove) -> i32 {
         //TODO: potential bitshift optimization, maybe not worth 
         let (mut material, mut forward, mut center) = (0, 0, 0);
@@ -85,4 +85,29 @@ impl Ranker {
         ((forward * self.weights[1] as i32) / 100) +
         ((center * self.weights[2] as i32) / 100)
     }
+
+    /// return the index of the best move in the turn's move list 
+    /// a reference to the move itself.
+    pub fn best_move(&self) -> Option<(usize, &SimpleMove)> {
+        match self.turn() {
+            Some(t) => {
+                let mut best = 0;
+                let mut best_score = 0;
+                for (i, m) in t.get_moves().iter().enumerate() {
+                    let score = self.score_move(m);
+                    if score > best_score {
+                        best = i;
+                        best_score = score;
+                    }
+                }
+                Some((best, &t.get_moves()[best]))
+            },
+            None => None,
+        }
+    }
+
+    pub fn turn(&self) -> Option<&Turn> {
+        self.turn.as_ref()
+    }
+
 }

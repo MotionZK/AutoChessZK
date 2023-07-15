@@ -93,6 +93,15 @@ impl Turn
     }
 }
 
+impl IntoIterator for Turn {
+    type Item = SimpleMove;
+    type IntoIter = ::alloc::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.moves.into_iter()
+    }
+}
+
 pub struct Board {
     position: Chess,
     moves: MoveList,
