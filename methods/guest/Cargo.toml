@@ -1,5 +1,5 @@
 [package]
-name = "player"
+name = "chess-zkvm"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,3 +12,11 @@ chess-core = { path = "../../core" }
 
 [patch.crates-io]
 btoi = { path = "../../rust-btoi/" }
+
+[[bin]]
+name = "main"
+path = "src/main/main.rs"
+
+[[bin]]
+name = "player"
+path = "src/player/main.rs"
