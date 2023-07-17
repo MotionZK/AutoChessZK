@@ -1,13 +1,16 @@
 // TODO: Update the name of the method loaded by the prover. E.g., if the method
 // is `multiply`, replace `METHOD_NAME_ELF` with `MULTIPLY_ELF` and replace
 // `METHOD_NAME_ID` with `MULTIPLY_ID`
-use methods::{METHOD_NAME_ELF, METHOD_NAME_ID};
-use methods::
+use methods::{MAIN_ELF, MAIN_ID, PLAYER_ELF, PLAYER_ID};
 use risc0_zkvm::{
     serde::{from_slice, to_vec},
     Executor, ExecutorEnv,
 };
 
+fn main() {
+}
+
+/*
 fn main() {
     // First, we construct an executor environment
     let env = ExecutorEnv::builder().build();
@@ -36,3 +39,4 @@ fn main() {
     // verify your receipt
     receipt.verify(METHOD_NAME_ID).unwrap();
 }
+*/

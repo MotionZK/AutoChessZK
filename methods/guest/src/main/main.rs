@@ -1,12 +1,8 @@
 #![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-#![no_std]  // std support is experimental
-
-
-use chess_core;
-use risc0_zkvm::guest::env;
+#![no_std]  
 
 risc0_zkvm::guest::entry!(main);
+/// main entry module for the guest application.
 
 // guest code acts as a player, receiving Turns from the host and returning move indexes
 // to the host. The host will then make the move and send the next Turn to the guest.
