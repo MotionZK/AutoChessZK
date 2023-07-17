@@ -1,0 +1,19 @@
+[package]
+name = "btoi-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+btoi = { path = ".." }
+
+[workspace]
+members = ["."] # Let fuzzing suite not interfere with workspaces
+
+[[bin]]
+name = "btoi_radix"
+path = "fuzz_targets/btoi_radix.rs"
