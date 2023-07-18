@@ -110,4 +110,8 @@ impl Ranker {
         self.turn.as_ref()
     }
 
+    pub fn set_turn(&mut self, turn: Turn) {
+        self.turn = Some(turn);
+    }
+
 }

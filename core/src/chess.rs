@@ -1,4 +1,5 @@
 use alloc::{borrow::ToOwned, vec::Vec};
+use serde::{Serialize, Deserialize};
 use shakmaty::{Chess, Position, MoveList, Square};
 
 pub use shakmaty::Move;
@@ -6,6 +7,7 @@ pub use shakmaty::Move;
 pub type ColorBitboard = u64;
 pub type RoleBitboard = [u64; 6];
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct SimpleMove {
     from: Option<u8>, // player module will convert to Square
     to: u8,
@@ -77,6 +79,7 @@ impl From<Move> for SimpleMove {
     }
 }
 
+#[derive(Clone, Deserialize, Serialize)]
 pub struct Turn {
     position: (ColorBitboard, Option<RoleBitboard>), // convert to color and role bitboards
     moves: Vec<SimpleMove>
@@ -84,6 +87,13 @@ pub struct Turn {
 
 impl Turn
 {
+    pub fn new(p: (ColorBitboard, Option<RoleBitboard>), m: Vec<SimpleMove>) -> Self {
+        Turn {
+            position: p,
+            moves: m,
+        }
+    }
+
     pub fn get_position(&self) -> &(ColorBitboard, Option<RoleBitboard>) {
         &self.position
     }
@@ -152,6 +162,11 @@ impl Board {
             position: (color_bb, None),
             moves: self.simple_moves(),
         }
+    }
+
+    /// get the side to move's pieces
+    pub fn to_bitboard(&self) -> ColorBitboard {
+        self.position.us().0
     }
 }
 

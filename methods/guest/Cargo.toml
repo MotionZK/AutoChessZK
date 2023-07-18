@@ -7,6 +7,10 @@ edition = "2021"
 
 [dependencies]
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
+chess-core = { path = "../../core" }
+risc0-zkvm = {workspace = true}
+
+[workspace.dependencies]
 risc0-zkvm = { version = "0.15.3", default-features = false }
 chess-core = { path = "../../core" }
 

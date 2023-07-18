@@ -1,10 +1,8 @@
 #![no_main]
-// If you want to try std support, also update the guest Cargo.toml file
-#![no_std]  // std support is experimental
+#![no_std] 
 
-
-use chess_core;
 use risc0_zkvm::guest::env;
+use chess_core::{instruction::Instruction, types::PlayerState, chess::Turn};
 
 risc0_zkvm::guest::entry!(main);
 
@@ -12,13 +10,27 @@ risc0_zkvm::guest::entry!(main);
 // to the host. The host will then make the move and send the next Turn to the guest.
 // The guest will then return the next move index, and so on.
 pub fn main() {
+    // initialize the guest, state should always point to the same location
+    // in memory, so we can use a static reference
+    let mut state = init();
+    loop {
+        // read the next turn from the host
+        state.ranker().set_turn(env::read::<Turn>());
+
+        // get the best move from the ranker
+        let best_move = state.ranker.best_move().unwrap().0;
+
+        // create and execute play instruction
+        let mut inx = Instruction::new(1, &best_move);
+
+        if inx.execute::<u32>() != 0 {
+            return
+        }
+    }
 }
 
-/// This function is called by the host to initialize the guest.
-/// It is called once before the first call to `main`, taking input
-/// from the host to configure and initialize the guest program.
-fn init() {
-    
+fn init() -> PlayerState {
+    let state = PlayerState::init();
+    state
 }
-
 
