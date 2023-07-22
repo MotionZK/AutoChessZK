@@ -14,7 +14,9 @@ risc0_zkvm::guest::entry!(main);
 /// move indexes from the host/other (player) modules.
 pub fn main() {
     let mut state = init();
+    
     loop {
+    
     }
 }
 

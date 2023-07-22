@@ -15,6 +15,7 @@ pub fn main() {
     let mut state = init();
     loop {
         // read the next turn from the host
+        // TODO: syscalls/instructions for receiving data mid-loop
         state.ranker().set_turn(env::read::<Turn>());
 
         // get the best move from the ranker
