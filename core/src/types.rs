@@ -1,5 +1,6 @@
 use crate::ranker::Ranker;
 use crate::chess::{Board, Turn};
+use crate::instruction::Instruction;
 
 use alloc::vec::Vec;
 use serde::{Serialize, Deserialize};
@@ -96,6 +97,10 @@ impl GameState {
         let player_ids = [config.player1.id(), config.player2.id()];
         let board = Board::new();
         let turn = Turn::new((board.to_bitboard(), None), Vec::new());
+
+        Instruction::new(0, &config.player1).execute::<u32>();
+        Instruction::new(0, &config.player2).execute::<u32>();
+
         GameState {
             board,
             turn,

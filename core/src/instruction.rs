@@ -8,8 +8,14 @@ use serde::Serialize;
 #[cfg(feature = "guest")]
 use risc0_zkvm::guest::env;
 
-declare_syscall!(PLAYER_PLAY_MOVE);
+// board instructions
+declare_syscall!(CHESS_PASS_PLAYERS);
 declare_syscall!(CHESS_PASS_TURN);
+declare_syscall!(CHESS_GET_TURN);
+
+// player instructions
+declare_syscall!(PLAYER_GET_TURN);
+declare_syscall!(PLAYER_PASS_MOVE);
 
 // instruction format to pass between host and guest
 // should be generalizable to other applications
@@ -36,18 +42,18 @@ impl Instruction {
     #[cfg(feature = "guest")]
     pub fn execute<T: serde::de::DeserializeOwned>(&mut self) -> T {
         assert!(!self.spent, "instruction already spent");
-
-        let result = match self.code {
-            1 => {
-               env::send_recv_slice::<u32, u32>(PLAYER_PLAY_MOVE, &self.data.as_slice())
-            },
-            2 => {
-               env::send_recv_slice::<u32, u32>(CHESS_PASS_TURN, &self.data.as_slice())
-            },
+        
+        let data = self.data.as_slice();
+        let call = match self.code {
+            0 => CHESS_PASS_PLAYERS,
+            1 => CHESS_PASS_TURN,
+            2 => CHESS_GET_TURN,
+            3 => PLAYER_PASS_MOVE,
+            4 => PLAYER_GET_TURN,
             _ => panic!("invalid instruction code"),
         };
-        
+
         self.spent = true;
-        from_slice(&result).unwrap()
+        from_slice(&env::send_recv_slice::<u32, u8>(call, data)).unwrap()
     }
 }

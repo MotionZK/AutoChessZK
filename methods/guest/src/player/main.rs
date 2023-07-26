@@ -22,7 +22,7 @@ pub fn main() {
         let best_move = state.ranker.best_move().unwrap().0;
 
         // create and execute play instruction
-        let mut inx = Instruction::new(1, &best_move);
+        let mut inx = Instruction::new(3, &best_move);
 
         if inx.execute::<u32>() != 0 {
             return
