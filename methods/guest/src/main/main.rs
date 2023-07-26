@@ -5,7 +5,7 @@
 use risc0_zkvm::guest::env;
 use chess_core::{instruction::Instruction, types::{PlayerState, PlayerConfig}, chess::Turn};
 use chess_core::types::GameState;
-use chess_core::chess::Board;
+use chess_core::chess::{Board, Outcome};
 
 risc0_zkvm::guest::entry!(main);
 
@@ -13,10 +13,22 @@ risc0_zkvm::guest::entry!(main);
 /// controls the board and the game loop. sends turns to the host and receives
 /// move indexes from the host/other (player) modules.
 pub fn main() {
-    let mut state = init();
-    
+    let mut state: GameState = init();
+
     loop {
-    
+        let turn = state.board.generate_turn();
+        // send turn to player
+        Instruction::new(1, &turn).execute::<u32>();
+        // receive move from player
+        let player_move = Instruction::new(2, &turn).execute::<u32>(); //usize is probably a bad idea
+        // really, these should be a single instruction, but with Motion Modules™
+        // we don't play by anyone's rules
+        state.board.play_move(player_move as usize);
+
+        if state.board.is_game_over() {
+            commit_outcome(&state);
+            return
+        }
     }
 }
 
@@ -26,4 +38,10 @@ pub fn main() {
 fn init() -> GameState {
     let state = GameState::init();
     state
+}
+
+/// Parse the outcome of the game and commit it to the host.
+pub fn commit_outcome(state: &GameState) {
+    let outcome = state.board.outcome();
+    env::commit(outcome);
 }

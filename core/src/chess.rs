@@ -3,6 +3,7 @@ use serde::{Serialize, Deserialize};
 use shakmaty::{Chess, Position, MoveList, Square};
 
 pub use shakmaty::Move;
+pub use shakmaty::Outcome;
 
 pub type ColorBitboard = u64;
 pub type RoleBitboard = [u64; 6];
@@ -167,6 +168,22 @@ impl Board {
     /// get the side to move's pieces
     pub fn to_bitboard(&self) -> ColorBitboard {
         self.position.us().0
+    }
+
+    pub fn is_game_over(&self) -> bool {
+        self.position.is_game_over()
+    }
+
+    pub fn outcome(&self) -> u32 {
+        match self.position.outcome().unwrap() {
+            Outcome::Draw => 0,
+            Outcome::Decisive { winner } => {
+                match winner {
+                    shakmaty::Color::White => 1,
+                    shakmaty::Color::Black => 2,
+                }
+            }
+        }
     }
 }
 
